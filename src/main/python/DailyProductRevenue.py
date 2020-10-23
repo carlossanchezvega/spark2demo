@@ -24,7 +24,7 @@ orders = spark.read. \
     format('csv'). \
     schema('order_id int, order_date string, order_customer_id int, order_status string'). \
     load(inputBaseDir+'/orders')
-
+orders.show()
 #load('/public/retail_db/orders')
 
 orderItems = spark.read. \
@@ -32,17 +32,16 @@ orderItems = spark.read. \
     schema('''order_item_id int, order_item_order_id int, order_item_product_id int,order_item_quantity float, order_item_subtotal float,order_item_product_price float''').\
     load(inputBaseDir+'/order_items')
 
-#    load('/public/retail_db/order_items''')
-
+orderItems.show()
 dailyProductRevenue = orders.\
                       where(orders.order_status.isin('COMPLETE', 'CLOSED')).\
                       join(orderItems, orders.order_id == orderItems.order_item_order_id). \
                       groupBy('order_date', 'order_item_product_id'). \
                       agg(round(sum('order_item_subtotal'),2).alias('product_revenue'))
 
-
+dailyProductRevenue.show()
 dailyProductRevenueSorted = dailyProductRevenue.\
-    orderBy(dailyProductRevenue.orderDate, dailyProductRevenue.revenue.desc())
+    orderBy(dailyProductRevenue.order_date, dailyProductRevenue.product_revenue.desc())
 
 
 outputBaseDir = props.get(env, 'output.base.dir')
